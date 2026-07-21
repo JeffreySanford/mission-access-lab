@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, interval, map, Observable, of, startWith, switchMap } from 'rxjs';
+import { catchError, interval, Observable, of, startWith, switchMap } from 'rxjs';
 import type { OperationsSnapshot } from './operations.models';
 
 @Injectable({ providedIn: 'root' })
@@ -10,9 +10,11 @@ export class OperationsApiService {
   watchSnapshot(): Observable<OperationsSnapshot> {
     return interval(3000).pipe(
       startWith(0),
-      switchMap(() => this.http.get<OperationsSnapshot>('/api/operations/snapshot').pipe(
-        catchError(() => of(this.createDemoSnapshot()))
-      ))
+      switchMap(() =>
+        this.http.get<OperationsSnapshot>('/api/operations/snapshot').pipe(
+          catchError(() => of(this.createDemoSnapshot())),
+        ),
+      ),
     );
   }
 
@@ -25,13 +27,22 @@ export class OperationsApiService {
     }));
     const denied = 37 + Math.round(Math.abs(Math.sin(now / 10000)) * 9);
     const allowed = 1224 + Math.round(Math.abs(Math.cos(now / 12000)) * 120);
+
     return {
-      capturedAt: new Date(now).toISOString(), requestsPerMinute: requestSeries.at(-1)?.value ?? 0,
-      availabilityPercent: 99.96, p95LatencyMs: 43, authorizationModelId: '01J-MISSION-DEMO-03',
-      totalChecks: allowed + denied, allowedChecks: allowed, deniedChecks: denied, requestSeries,
+      capturedAt: new Date(now).toISOString(),
+      requestsPerMinute: requestSeries.at(-1)?.value ?? 0,
+      availabilityPercent: 99.96,
+      p95LatencyMs: 43,
+      authorizationModelId: '01J-MISSION-DEMO-03',
+      totalChecks: allowed + denied,
+      allowedChecks: allowed,
+      deniedChecks: denied,
+      requestSeries,
       latencyByOperation: [
-        { operation: 'Check', p95Ms: 31, count: 916 }, { operation: 'ListObjects', p95Ms: 68, count: 241 },
-        { operation: 'WriteTuples', p95Ms: 46, count: 58 }, { operation: 'ModelPublish', p95Ms: 119, count: 3 },
+        { operation: 'Check', p95Ms: 31, count: 916 },
+        { operation: 'ListObjects', p95Ms: 68, count: 241 },
+        { operation: 'WriteTuples', p95Ms: 46, count: 58 },
+        { operation: 'ModelPublish', p95Ms: 119, count: 3 },
       ],
       services: [
         { id: 'portal', label: 'Angular Portal', kind: 'UI', state: 'healthy', latencyMs: 8, x: 9, y: 45 },
