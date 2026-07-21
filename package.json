@@ -5,7 +5,7 @@
   "description": "Nx polyglot training lab for Angular, Spring Boot, OpenFGA, PostgreSQL, testing, observability, and CI/CD.",
   "license": "MIT",
   "scripts": {
-    "start": "nx run-many -t serve --projects=access-portal,authorization-wrapper --parallel=2",
+    "start:all": "nx run-many -t serve --projects=access-portal,authorization-wrapper --parallel=2",
     "start:web": "nx serve access-portal",
     "start:api": "nx serve authorization-wrapper",
     "build": "nx run-many -t build --all",
