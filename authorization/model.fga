@@ -1,0 +1,34 @@
+model
+  schema 1.1
+
+type user
+
+type organization
+  relations
+    define member: [user]
+    define administrator: [user]
+
+type team
+  relations
+    define organization: [organization]
+    define member: [user]
+    define manager: [user]
+
+type project
+  relations
+    define organization: [organization]
+    define owner: [user]
+    define contributor: [user, team#member]
+    define viewer: [user, team#member]
+    define can_view: viewer or contributor or owner or member from organization
+    define can_edit: contributor or owner or administrator from organization
+    define can_manage: owner or administrator from organization
+
+type document
+  relations
+    define parent: [project]
+    define owner: [user]
+    define editor: [user]
+    define viewer: [user]
+    define can_view: viewer or editor or owner or can_view from parent
+    define can_edit: editor or owner or can_edit from parent

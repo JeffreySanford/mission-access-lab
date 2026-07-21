@@ -1,0 +1,14 @@
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" routerLink="/operations" aria-label="Mission Access Lab home">
+      <span class="brand__mark" aria-hidden="true">M</span>
+      <span><strong>Mission Access Lab</strong><small>Fine-grained authorization training platform</small></span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a routerLink="/operations" routerLinkActive="active">Operations</a>
+      <a routerLink="/authorization" routerLinkActive="active">Authorization Lab</a>
+    </nav>
+    <div class="environment"><span></span> local training</div>
+  </header>
+  <main><router-outlet></router-outlet></main>
+</div>

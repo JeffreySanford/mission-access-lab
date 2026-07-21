@@ -1,0 +1,11 @@
+{
+  "writes": {
+    "tuple_keys": [
+      {"user":"user:alice","relation":"owner","object":"project:orion"},
+      {"user":"user:bob","relation":"viewer","object":"project:orion"},
+      {"user":"project:orion","relation":"parent","object":"document:launch-plan"},
+      {"user":"organization:mission","relation":"organization","object":"project:orion"},
+      {"user":"user:carol","relation":"administrator","object":"organization:mission"}
+    ]
+  }
+}

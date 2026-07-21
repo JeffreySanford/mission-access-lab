@@ -1,0 +1,47 @@
+{
+  "name": "access-portal",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/access-portal/src",
+  "tags": ["scope:portal", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/access-portal",
+        "index": "apps/access-portal/src/index.html",
+        "browser": "apps/access-portal/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/access-portal/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [{"glob": "**/*", "input": "apps/access-portal/public"}],
+        "styles": ["apps/access-portal/src/styles.scss"]
+      },
+      "configurations": {
+        "production": { "outputHashing": "all", "budgets": [{"type": "initial", "maximumWarning": "700kB", "maximumError": "1MB"}] },
+        "development": { "optimization": false, "sourceMap": true }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "continuous": true,
+      "options": {
+        "buildTarget": "access-portal:build:development",
+        "proxyConfig": "apps/access-portal/proxy.conf.json",
+        "port": 4200
+      }
+    },
+    "test": {
+      "executor": "@angular/build:karma",
+      "options": {
+        "polyfills": ["zone.js", "zone.js/testing"],
+        "tsConfig": "apps/access-portal/tsconfig.spec.json",
+        "inlineStyleLanguage": "scss",
+        "styles": ["apps/access-portal/src/styles.scss"]
+      }
+    },
+    "lint": { "executor": "@nx/eslint:lint" }
+  }
+}

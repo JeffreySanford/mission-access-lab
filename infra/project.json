@@ -1,0 +1,9 @@
+{
+  "name": "infra", "$schema": "../node_modules/nx/schemas/project-schema.json", "projectType": "application", "tags": ["scope:platform", "type:infra"],
+  "targets": {
+    "up": { "executor": "nx:run-commands", "continuous": true, "options": { "command": "docker compose -f infra/compose.yaml up" } },
+    "down": { "executor": "nx:run-commands", "options": { "command": "docker compose -f infra/compose.yaml down" } },
+    "reset": { "executor": "nx:run-commands", "options": { "command": "docker compose -f infra/compose.yaml down -v --remove-orphans" } },
+    "logs": { "executor": "nx:run-commands", "continuous": true, "options": { "command": "docker compose -f infra/compose.yaml logs -f" } }
+  }
+}

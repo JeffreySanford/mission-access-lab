@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+set -eu
+if command -v gradle >/dev/null 2>&1; then exec gradle "$@"; fi
+echo "Gradle is not installed and the wrapper JAR is not checked into this generated archive."
+echo "Install Gradle 8.14+ once, then run: gradle wrapper --gradle-version 8.14.3"
+exit 1

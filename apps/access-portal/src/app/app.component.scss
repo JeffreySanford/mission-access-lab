@@ -1,0 +1,20 @@
+.shell { min-height: 100vh; }
+.topbar {
+  position: sticky; top: 0; z-index: 20; min-height: 72px; padding: 0 3vw;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px;
+  border-bottom: 1px solid var(--line); background: rgba(7, 17, 31, 0.86); backdrop-filter: blur(18px);
+}
+.brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; width: fit-content; }
+.brand__mark { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(81,213,255,.55); border-radius: 12px; background: rgba(81,213,255,.1); color: var(--cyan); font-weight: 900; box-shadow: 0 0 28px rgba(81,213,255,.15); }
+.brand strong, .brand small { display: block; }
+.brand small { color: var(--muted); margin-top: 2px; }
+nav { display: flex; gap: 6px; padding: 5px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.025); }
+nav a { padding: 9px 14px; border-radius: 10px; color: var(--muted); text-decoration: none; transition: .2s ease; }
+nav a:hover, nav a.active { color: var(--text); background: rgba(81,213,255,.09); }
+.environment { justify-self: end; color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .09em; }
+.environment span { display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px var(--green); animation: pulse 2s ease-in-out infinite; }
+main { width: min(1500px, 94vw); margin: 0 auto; padding: 34px 0 70px; }
+@keyframes pulse { 50% { opacity: .45; transform: scale(.75); } }
+@media (max-width: 850px) { .topbar { grid-template-columns: 1fr auto; } .environment { display: none; } .brand small { display: none; } }
+@media (max-width: 600px) { .topbar { position: static; grid-template-columns: 1fr; padding: 14px 4vw; } nav { width: 100%; } nav a { flex: 1; text-align: center; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }

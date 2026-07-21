@@ -1,0 +1,22 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+permissions: { contents: read }
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: gradle }
+      - run: npm ci
+      - run: npm run verify
+      - run: npx nx lint access-portal
+      - run: npx nx test access-portal --watch=false --browsers=ChromeHeadless
+      - name: Java tests
+        working-directory: apps/authorization-wrapper
+        run: ./gradlew test
+      - run: npx nx build access-portal

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+tmp/
+.nx/
+.angular/
+.gradle/
+build/
+**/build/
+.idea/
+.vscode/
+*.iml
+.env
+.DS_Store
+coverage/
+playwright-report/
+test-results/
+infra/data/

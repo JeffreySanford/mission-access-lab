@@ -1,0 +1,67 @@
+<section *ngIf="viewModel$ | async as vm" class="operations" aria-labelledby="operations-title">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Live platform overview</p>
+      <h1 id="operations-title">Mission operations</h1>
+      <p>Observe the complete authorization path—from Angular request through Spring policy enforcement, OpenFGA evaluation, and audit persistence.</p>
+    </div>
+    <div class="capture"><span class="capture__pulse"></span><div><strong>Streaming telemetry</strong><small>Updated {{ vm.capturedAt | date:'mediumTime' }}</small></div></div>
+  </header>
+
+  <div class="kpi-grid" aria-label="Key operational indicators">
+    <article class="kpi"><span>Requests / minute</span><strong>{{ vm.requestsPerMinute | number }}</strong><small class="positive">↗ authorization traffic</small><i class="kpi__glow cyan"></i></article>
+    <article class="kpi"><span>Availability</span><strong>{{ vm.availabilityPercent | number:'1.2-2' }}%</strong><small class="positive">all core services responding</small><i class="kpi__glow green"></i></article>
+    <article class="kpi"><span>P95 decision latency</span><strong>{{ vm.p95LatencyMs }} ms</strong><small>Spring → OpenFGA round trip</small><i class="kpi__glow violet"></i></article>
+    <article class="kpi"><span>Pinned model</span><strong class="model-id">{{ vm.authorizationModelId }}</strong><small>immutable authorization version</small><i class="kpi__glow amber"></i></article>
+  </div>
+
+  <div class="dashboard-grid">
+    <article class="panel traffic-panel">
+      <header><div><p class="panel__eyebrow">Throughput</p><h2>Authorization requests</h2></div><span class="badge healthy">Healthy</span></header>
+      <svg class="traffic-chart" viewBox="0 0 720 180" role="img" aria-label="Authorization request traffic over the last 24 minutes">
+        <defs><linearGradient id="trafficFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#51d5ff" stop-opacity=".38"/><stop offset="1" stop-color="#51d5ff" stop-opacity="0"/></linearGradient></defs>
+        <g class="gridlines"><line *ngFor="let y of [30,70,110,150]" x1="0" [attr.y1]="y" x2="720" [attr.y2]="y"></line></g>
+        <path class="traffic-area" [attr.d]="vm.trafficAreaPath"></path><path class="traffic-line" [attr.d]="vm.trafficPath"></path>
+      </svg>
+      <div class="axis-labels"><span>24 min ago</span><span>12 min ago</span><span>now</span></div>
+    </article>
+
+    <article class="panel decision-panel">
+      <header><div><p class="panel__eyebrow">Policy results</p><h2>Allow / deny ratio</h2></div></header>
+      <div class="decision-content">
+        <div class="donut" [style.--allow]="vm.allowPercent + ''" role="img" [attr.aria-label]="vm.allowPercent.toFixed(1) + '% allowed'">
+          <svg viewBox="0 0 120 120"><circle class="donut__track" cx="60" cy="60" r="48"></circle><circle class="donut__allow" cx="60" cy="60" r="48" pathLength="100" [attr.stroke-dasharray]="vm.allowPercent + ' ' + vm.denyPercent"></circle></svg>
+          <div><strong>{{ vm.allowPercent | number:'1.1-1' }}%</strong><span>allowed</span></div>
+        </div>
+        <dl><div><dt>Allowed</dt><dd>{{ vm.allowedChecks | number }}</dd></div><div><dt>Denied</dt><dd>{{ vm.deniedChecks | number }}</dd></div><div><dt>Total checks</dt><dd>{{ vm.totalChecks | number }}</dd></div></dl>
+      </div>
+    </article>
+
+    <article class="panel topology-panel">
+      <header><div><p class="panel__eyebrow">Architecture</p><h2>Platform request topology</h2></div><span class="legend"><i></i> animated traffic</span></header>
+      <div class="topology" role="img" aria-label="Platform services and animated request flows">
+        <svg viewBox="0 0 1000 360" preserveAspectRatio="none">
+          <g *ngFor="let link of vm.links">
+            <line *ngIf="nodeById(vm.services, link.source) as source" class="flow flow--shadow" [attr.x1]="source.x * 10" [attr.y1]="source.y * 3.6" [attr.x2]="(nodeById(vm.services, link.target)?.x ?? 0) * 10" [attr.y2]="(nodeById(vm.services, link.target)?.y ?? 0) * 3.6"></line>
+            <line *ngIf="nodeById(vm.services, link.source) as source" class="flow" [attr.x1]="source.x * 10" [attr.y1]="source.y * 3.6" [attr.x2]="(nodeById(vm.services, link.target)?.x ?? 0) * 10" [attr.y2]="(nodeById(vm.services, link.target)?.y ?? 0) * 3.6"></line>
+          </g>
+        </svg>
+        <div *ngFor="let service of vm.services" class="service-node" [class.degraded]="service.state === 'degraded'" [style.left.%]="service.x" [style.top.%]="service.y">
+          <span class="service-node__kind">{{ service.kind }}</span><strong>{{ service.label }}</strong><small><i></i>{{ service.state }} · {{ service.latencyMs }} ms</small>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel latency-panel">
+      <header><div><p class="panel__eyebrow">Performance</p><h2>P95 by operation</h2></div></header>
+      <div class="bars">
+        <div *ngFor="let item of vm.latencyByOperation" class="bar-row"><div class="bar-row__labels"><strong>{{ item.operation }}</strong><span>{{ item.p95Ms }} ms · {{ item.count | number }} calls</span></div><div class="bar-track"><i [style.width.%]="item.p95Ms / maxLatency(vm.latencyByOperation) * 100"></i></div></div>
+      </div>
+    </article>
+
+    <article class="panel audit-panel">
+      <header><div><p class="panel__eyebrow">Traceability</p><h2>Recent authorization activity</h2></div><a routerLink="/authorization">Run a check →</a></header>
+      <div class="audit-list"><div *ngFor="let event of vm.auditEvents" class="audit-event"><span class="decision" [class.allow]="event.decision === 'ALLOW'" [class.deny]="event.decision === 'DENY'">{{ event.decision }}</span><div><strong>{{ event.actor }} · {{ event.action }}</strong><p>{{ event.resource }} — {{ event.detail }}</p></div><time>{{ event.occurredAt | date:'mediumTime' }}</time></div></div>
+    </article>
+  </div>
+</section>

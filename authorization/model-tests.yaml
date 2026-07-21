@@ -1,0 +1,38 @@
+name: mission-access-model-tests
+model_file: ./model.fga
+tuples:
+  - user: user:alice
+    relation: owner
+    object: project:orion
+  - user: project:orion
+    relation: parent
+    object: document:launch-plan
+  - user: user:bob
+    relation: viewer
+    object: project:orion
+  - user: user:mallory
+    relation: member
+    object: organization:other
+
+tests:
+  - name: owner inherits edit on child document
+    check:
+      - user: user:alice
+        object: document:launch-plan
+        assertions:
+          can_view: true
+          can_edit: true
+  - name: viewer can read but cannot edit
+    check:
+      - user: user:bob
+        object: document:launch-plan
+        assertions:
+          can_view: true
+          can_edit: false
+  - name: unrelated member has no access
+    check:
+      - user: user:mallory
+        object: document:launch-plan
+        assertions:
+          can_view: false
+          can_edit: false
