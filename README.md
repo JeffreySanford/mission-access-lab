@@ -32,3 +32,11 @@ Open the portal at `http://localhost:4200`, OpenFGA Playground at `http://localh
 ## Important note about the generated archive
 
 The standard Gradle wrapper JAR is binary and was not available in the generation environment. Run the one-time `gradle wrapper` command above; after that, commit `gradle-wrapper.jar` and use `./gradlew` normally.
+
+## Publish to GitHub
+
+```powershell
+.\tools\publish-github.ps1
+```
+
+This creates `JeffreySanford/mission-access-lab` as a public repository and pushes `main` when GitHub CLI is authenticated.

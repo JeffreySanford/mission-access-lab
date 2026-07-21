@@ -11,3 +11,4 @@
 | [Troubleshooting](troubleshooting.md) | Common failures and diagnostic commands |
 | [AWS and CI/CD roadmap](aws-and-cicd-roadmap.md) | Next-stage cloud and deployment exercises |
 | [Interview walkthrough](interview-walkthrough.md) | A structured 10-minute explanation of the project |
+| [GitHub publication](github-publication.md) | One-command creation and public push |
