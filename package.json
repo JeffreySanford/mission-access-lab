@@ -5,7 +5,7 @@
   "description": "Nx polyglot training lab for Angular, Spring Boot, OpenFGA, PostgreSQL, testing, observability, and CI/CD.",
   "license": "MIT",
   "scripts": {
-    "start:all": "nx run-many -t serve --projects=access-portal,authorization-wrapper --parallel=2",
+    "start": "nx run-many -t serve --projects=access-portal,authorization-wrapper --parallel=2",
     "start:web": "nx serve access-portal",
     "start:api": "nx serve authorization-wrapper",
     "build": "nx run-many -t build --all",
@@ -16,8 +16,10 @@
     "infra:down": "nx run infra:down",
     "infra:reset": "nx run infra:reset",
     "fga:bootstrap": "node tools/openfga/bootstrap.mjs",
-    "fga:test": "docker run --rm -v \"${PWD}/authorization:/authorization\" openfga/cli:v0.7.15 model test --tests /authorization/model-tests.yaml",
-    "verify": "node tools/verify-workspace.mjs"
+    "fga:test": "node tools/openfga/test-model.mjs",
+    "verify": "node tools/verify-workspace.mjs",
+    "start:all": "nx run-many -t serve --projects=access-portal,authorization-wrapper --parallel=2",
+    "install:check": "pnpm exec nx report"
   },
   "dependencies": {
     "@angular/animations": "22.0.7",
@@ -37,6 +39,7 @@
     "@angular/compiler-cli": "22.0.7",
     "@nx/angular": "23.1.0",
     "@nx/eslint": "23.1.0",
+    "@nx/eslint-plugin": "23.1.0",
     "@nx/js": "23.1.0",
     "@nx/workspace": "23.1.0",
     "@types/jasmine": "5.1.9",
@@ -54,7 +57,8 @@
     "typescript": "5.9.2"
   },
   "engines": {
-    "node": ">=22.12.0",
-    "npm": ">=10.0.0"
-  }
+    "node": ">=22.13.0",
+    "pnpm": ">=11.0.0"
+  },
+  "packageManager": "pnpm@11.15.1"
 }
