@@ -6,17 +6,17 @@ The core learning path is intentionally simple: a user attempts an action on a m
 
 ## Start locally
 
-Prerequisites: Node 22+, npm 10+, Java 21, Gradle 8.14+, Docker Desktop.
+Prerequisites: Node 22.13+, pnpm 11, Java 21, and Docker Desktop. The checked-in `.npmrc` overrides stale user-level corporate registries for this project. The Gradle wrapper downloads its pinned wrapper JAR on first use.
 
 ```powershell
-npm install
-cd apps/authorization-wrapper
-gradle wrapper --gradle-version 8.14.3
-cd ../..
-npm run infra:up
-npm run fga:bootstrap
+corepack enable
+corepack prepare pnpm@11.15.1 --activate
+pnpm config get registry
+pnpm install
+pnpm infra:up
+pnpm fga:bootstrap
 # Set OPENFGA_STORE_ID and OPENFGA_MODEL_ID printed above
-npm run start
+pnpm start
 ```
 
 Open the portal at `http://localhost:4200`, OpenFGA Playground at `http://localhost:3000`, API health at `http://localhost:8080/actuator/health`, and Keycloak at `http://localhost:8081`.
@@ -28,10 +28,6 @@ Open the portal at `http://localhost:4200`, OpenFGA Playground at `http://localh
 3. [`apps/access-portal/src/app/features/operations`](apps/access-portal/src/app/features/operations) — animated operational dashboard.
 4. [`apps/authorization-wrapper/src/main/java`](apps/authorization-wrapper/src/main/java) — Java wrapper and ports/adapters structure.
 5. [`authorization/model.fga`](authorization/model.fga) — Zanzibar-inspired relationship model.
-
-## Important note about the generated archive
-
-The standard Gradle wrapper JAR is binary and was not available in the generation environment. Run the one-time `gradle wrapper` command above; after that, commit `gradle-wrapper.jar` and use `./gradlew` normally.
 
 ## Publish to GitHub
 
