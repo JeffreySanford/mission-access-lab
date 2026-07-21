@@ -1,22 +1,49 @@
 name: CI
+
 on:
-  push: { branches: [main] }
+  push:
+    branches: [main]
   pull_request:
-permissions: { contents: read }
+
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.15.1
+          run_install: false
+
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
+        with:
+          node-version: 22.16.0
+
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 21, cache: gradle }
-      - run: npm ci
-      - run: npm run verify
-      - run: npx nx lint access-portal
-      - run: npx nx test access-portal --watch=false --browsers=ChromeHeadless
-      - name: Java tests
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install JavaScript dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Verify workspace structure
+        run: pnpm verify
+
+      - name: Lint Angular portal
+        run: pnpm exec nx lint access-portal
+
+      - name: Test Angular portal
+        run: pnpm exec nx test access-portal --watch=false --browsers=ChromeHeadless
+
+      - name: Test Spring Boot wrapper
         working-directory: apps/authorization-wrapper
         run: ./gradlew test
-      - run: npx nx build access-portal
+
+      - name: Build Angular portal
+        run: pnpm exec nx build access-portal
