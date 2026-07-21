@@ -1,6 +1,40 @@
-#!/usr/bin/env sh
+#!/bin/sh
 set -eu
-if command -v gradle >/dev/null 2>&1; then exec gradle "$@"; fi
-echo "Gradle is not installed and the wrapper JAR is not checked into this generated archive."
-echo "Install Gradle 8.14+ once, then run: gradle wrapper --gradle-version 8.14.3"
-exit 1
+
+APP_HOME=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+WRAPPER_JAR="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+WRAPPER_URL="https://raw.githubusercontent.com/gradle/gradle/v8.14.3/gradle/wrapper/gradle-wrapper.jar"
+
+if [ ! -f "$WRAPPER_JAR" ]; then
+  echo "Gradle wrapper JAR is missing; downloading the pinned Gradle 8.14.3 wrapper..."
+  mkdir -p "$(dirname "$WRAPPER_JAR")"
+  TEMP_JAR="$WRAPPER_JAR.tmp"
+  rm -f "$TEMP_JAR"
+
+  if command -v curl >/dev/null 2>&1; then
+    curl --fail --location --silent --show-error "$WRAPPER_URL" --output "$TEMP_JAR"
+  elif command -v wget >/dev/null 2>&1; then
+    wget --quiet "$WRAPPER_URL" --output-document="$TEMP_JAR"
+  else
+    echo "Neither curl nor wget is available. Install one of them, or generate the wrapper with Gradle." >&2
+    exit 1
+  fi
+
+  mv "$TEMP_JAR" "$WRAPPER_JAR"
+fi
+
+if [ -n "${JAVA_HOME:-}" ]; then
+  JAVACMD="$JAVA_HOME/bin/java"
+else
+  JAVACMD="java"
+fi
+
+if ! command -v "$JAVACMD" >/dev/null 2>&1 && [ ! -x "$JAVACMD" ]; then
+  echo "Java was not found. Install Java 21 or set JAVA_HOME." >&2
+  exit 1
+fi
+
+exec "$JAVACMD" ${JAVA_OPTS:-} ${GRADLE_OPTS:-} \
+  -Dorg.gradle.appname=gradlew \
+  -classpath "$WRAPPER_JAR" \
+  org.gradle.wrapper.GradleWrapperMain "$@"
