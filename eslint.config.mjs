@@ -10,7 +10,7 @@ export default [
   // Actual docker-compose parser compatibility is validated separately by `pnpm run lint:compose`.
   ...yml.configs['flat/recommended'],
   {
-    ignores: ['**/dist', '**/build', '**/.gradle', '**/node_modules'],
+    ignores: ['**/dist', '**/build', '**/.gradle', '**/node_modules', '**/storybook-static'],
   },
   {
     files: ['**/*.ts'],

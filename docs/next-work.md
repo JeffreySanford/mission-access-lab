@@ -29,11 +29,15 @@ Frontend (`apps/access-portal`):
 
 Edge cases worth naming explicitly rather than leaving implicit: empty user/relation/object strings, unicode in user IDs, very long object identifiers, concurrent checks for the same tuple, OpenFGA store ID present but model ID absent (and vice versa).
 
-## 2. Storybook
+## 2. Storybook — done
 
-- [ ] `npx storybook init` for `access-portal` (Angular builder).
-- [ ] Stories for `AuthorizationPlaygroundComponent`, `OperationsOverviewComponent`, and any presentational sub-components — cover loading, empty, allow, deny, and error states via mocked `HttpClient`.
-- [ ] Wire a Storybook build/serve Nx target consistent with the rest of the workspace's target naming.
+- [x] Scaffolded via `nx g @nx/storybook:configuration access-portal` (`@storybook/angular` 10.5.3, Nx's inferred-plugin path — no `angular.json` needed). This took real work to get running; three genuine blockers in order:
+  1. **`@storybook/angular`'s webpack builder now hard-requires the Angular Architect builder path** (`SB_FRAMEWORK_ANGULAR_0001`) whenever `@angular-devkit/build-angular` is resolvable on disk — and it always is, because `@nx/angular` (used for its ESLint config) declares it as a peer dependency that pnpm auto-installs regardless of what's in our own `package.json`. The fix: don't fight it — define explicit `storybook`/`build-storybook` targets in `apps/access-portal/project.json` using the real Angular Architect builders (`@storybook/angular:start-storybook` / `:build-storybook`) with `browserTarget: "access-portal:build:development"`. Nx executors are interoperable with Angular Architect builders, so no `angular.json` is required — Nx's own inferred `@nx/storybook/plugin` targets (which invoke the plain, no-longer-supported `storybook build` CLI) are simply overridden by these explicit ones.
+  2. **Compodoc** is on by default for both builders and isn't installed — set `"compodoc": false` on both targets (not needed for this lab).
+  3. **Duplicate webpack instances**: `@storybook/builder-webpack5` and `@angular-devkit/build-angular` each resolve `webpack@5.106.2` with different peer contexts under pnpm's default strict isolation, producing two separately-instantiated copies of the "same" version — `instanceof Compilation` checks then fail across the plugin boundary (`TypeError: The 'compilation' argument must be an instance of Compilation`). A `pnpm.overrides` pin on the version alone doesn't collapse peer-qualified duplicates. Fixed by switching to `node-linker=hoisted` in `.npmrc` — a workspace-wide change, but verified the full `verify:release` suite (lint/test/build, not just Storybook) still passes after it.
+  4. Also needed `apps/access-portal/tsconfig.json` (the generator expects the standard Nx per-project tsconfig; this workspace's app/spec tsconfigs extended the base directly without one).
+- [x] Stories for `AuthorizationPlaygroundComponent` (`NoDecisionYet`, `DiagnosticsUnavailable`, `AllowResult`, `DenyResult`, `Loading`, `CheckFailed` — the interactive ones drive real clicks via `storybook/test`'s `userEvent`/`within`/`expect` against a mocked `HttpClient`) and `OperationsOverviewComponent` (`Healthy`, `DegradedService`, `Empty`, mocking `OperationsApiService`). All 9 verified live in the browser, not just build-checked — play-function assertions (ALLOW/DENY/Checking… text) confirmed actually rendering correctly.
+- [x] `pnpm run verify:release` and CI (`.github/workflows/ci.yml`) both now run `access-portal:build-storybook` as a real gate — CI was simplified to just call `pnpm run verify:release` directly instead of duplicating individual steps, so the two can't drift out of sync.
 
 ## 3. E2E, verbose, every edge case
 

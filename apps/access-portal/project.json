@@ -44,6 +44,26 @@
         "watch": false
       }
     },
-    "lint": { "executor": "@nx/eslint:lint" }
+    "lint": { "executor": "@nx/eslint:lint" },
+    "storybook": {
+      "executor": "@storybook/angular:start-storybook",
+      "continuous": true,
+      "options": {
+        "browserTarget": "access-portal:build:development",
+        "configDir": "apps/access-portal/.storybook",
+        "port": 4400,
+        "compodoc": false
+      }
+    },
+    "build-storybook": {
+      "executor": "@storybook/angular:build-storybook",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "browserTarget": "access-portal:build:development",
+        "configDir": "apps/access-portal/.storybook",
+        "outputDir": "apps/access-portal/storybook-static",
+        "compodoc": false
+      }
+    }
   }
 }

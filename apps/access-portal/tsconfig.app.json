@@ -1,6 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "outDir": "../../dist/out-tsc", "types": [] },
-  "files": ["src/main.ts"],
-  "include": ["src/**/*.d.ts"]
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": []
+  },
+  "files": [
+    "src/main.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "**/*.stories.ts",
+    "**/*.stories.js"
+  ]
 }
