@@ -32,7 +32,16 @@ services:
     container_name: mission-keycloak
     image: quay.io/keycloak/keycloak:26.3
     command: start-dev --http-port=8080
-    environment: { KC_BOOTSTRAP_ADMIN_USERNAME: admin, KC_BOOTSTRAP_ADMIN_PASSWORD: admin }
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Fixes the issuer Keycloak stamps into every token to the docker-network hostname
+      # (matching authorization-wrapper's OIDC_ISSUER_URI) regardless of which address —
+      # host-side localhost:8081 or in-network keycloak:8080 — was used to request it.
+      # Without this, a token requested from the host carries iss=http://localhost:8081/...
+      # and the wrapper (which only trusts http://keycloak:8080/...) rejects it.
+      KC_HOSTNAME: http://keycloak:8080
+      KC_HOSTNAME_STRICT: "true"
     ports: ["8081:8080"]
   authorization-wrapper:
     container_name: mission-authorization-wrapper

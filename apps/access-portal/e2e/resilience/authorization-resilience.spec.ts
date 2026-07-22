@@ -1,14 +1,23 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { bootstrapOpenFga, ensureInfra, recreateWrapper, startService, stopService } from './infra-control';
+import {
+  bootstrapKeycloak,
+  bootstrapOpenFga,
+  ensureInfra,
+  recreateWrapper,
+  startService,
+  stopService,
+} from './infra-control';
 
 /**
  * The deliberately-deferred negative-space cases from docs/next-work.md section 3:
- * OpenFGA container down, a stale/wrong model ID, and a missing JWT once
- * SECURITY_ENABLED=true. Each needs to mutate live infra state (stop a container,
- * force-recreate the wrapper with different env) mid-suite, which is slower and
- * riskier than the golden-path suite — kept in a separate testDir, excluded from the
- * default `access-portal:e2e` target, and run explicitly via
- * `nx run access-portal:e2e-resilience` / `pnpm run e2e:resilience`.
+ * OpenFGA container down, a stale/wrong model ID, a missing JWT once
+ * SECURITY_ENABLED=true — plus the valid-JWT authenticated success path, which was
+ * never exercised at all before this (no Keycloak realm/client/user existed). Each
+ * case needs to mutate live infra state (stop a container, force-recreate the wrapper
+ * with different env) mid-suite, which is slower and riskier than the golden-path
+ * suite — kept in a separate testDir, excluded from the default `access-portal:e2e`
+ * target, and run explicitly via `nx run access-portal:e2e-resilience` /
+ * `pnpm run e2e:resilience`.
  *
  * Every describe block restores the wrapper to a known-good, freshly-bootstrapped
  * OpenFGA store/model before finishing, so a partial run doesn't leave the shared dev
@@ -74,15 +83,20 @@ test.describe.serial('Authorization lab resilience — stale OpenFGA model ID', 
   });
 });
 
-test.describe.serial('Authorization lab resilience — missing JWT under SECURITY_ENABLED=true', () => {
+test.describe.serial('Authorization lab resilience — JWT auth under SECURITY_ENABLED=true', () => {
   let validStoreId = '';
   let validModelId = '';
+  let accessToken = '';
 
   test.beforeAll(async () => {
     const bootstrapped = bootstrapOpenFga();
     validStoreId = bootstrapped.storeId;
     validModelId = bootstrapped.modelId;
     await recreateWrapper({ OPENFGA_STORE_ID: validStoreId, OPENFGA_MODEL_ID: validModelId, SECURITY_ENABLED: 'true' });
+    // seed-tuples.json grants user:alice owner on project:orion, so this token doubles
+    // as proof the whole chain works: Keycloak-issued JWT -> resource-server validation
+    // -> OpenFGA check -> the same ALLOW the golden-path suite gets unauthenticated.
+    ({ accessToken } = bootstrapKeycloak());
   });
 
   test.afterAll(async () => {
@@ -99,5 +113,15 @@ test.describe.serial('Authorization lab resilience — missing JWT under SECURIT
   test('the actuator health endpoint stays open without a token', async ({ request }) => {
     const response = await request.get('/actuator/health');
     expect(response.ok()).toBe(true);
+  });
+
+  test('a request with a valid Keycloak-issued bearer token succeeds with the real decision', async ({ request }) => {
+    const response = await request.post('/api/access/check', {
+      headers: { authorization: `Bearer ${accessToken}` },
+      data: { user: 'user:alice', relation: 'can_view', object: 'project:orion' },
+    });
+    expect(response.status()).toBe(200);
+    const body = (await response.json()) as { allowed: boolean };
+    expect(body.allowed).toBe(true);
   });
 });

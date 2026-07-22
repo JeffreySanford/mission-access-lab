@@ -62,3 +62,14 @@ export function bootstrapOpenFga(): { storeId: string; modelId: string } {
 export function ensureInfra(): void {
   execFileSync('node', ['tools/infra-ensure.mjs'], { cwd: workspaceRoot, stdio: 'inherit' });
 }
+
+/** Idempotently provisions the mission-access Keycloak realm/client/user and returns a
+ * fresh bearer token for the test user, so resilience tests can exercise the real
+ * authenticated success path (not just the missing-token rejection). */
+export function bootstrapKeycloak(): { realm: string; clientId: string; username: string; accessToken: string } {
+  const output = execFileSync('node', ['tools/keycloak/bootstrap.mjs', '--json'], {
+    cwd: workspaceRoot,
+    encoding: 'utf8',
+  });
+  return JSON.parse(output.trim()) as { realm: string; clientId: string; username: string; accessToken: string };
+}

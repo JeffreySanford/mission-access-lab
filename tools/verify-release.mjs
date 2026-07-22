@@ -83,6 +83,7 @@ function prepareLiveOpenFgaForE2e() {
 
 run('Workspace sanity', 'node', ['tools/verify-workspace.mjs']);
 run('E2E readiness contract', 'node', ['tools/verify-e2e-contract.mjs']);
+run('OpenFGA model tests', 'pnpm', ['run', 'fga:test']);
 run('Lint (TypeScript, Java, YAML, docker compose)', 'pnpm', ['run', 'lint']);
 run('Unit tests (Angular + Spring Boot)', 'pnpm', ['run', 'test']);
 run('Build', 'pnpm', ['run', 'build']);
