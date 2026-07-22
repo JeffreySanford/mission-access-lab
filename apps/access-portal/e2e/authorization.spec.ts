@@ -83,6 +83,24 @@ test.describe('Authorization lab — golden paths', () => {
   });
 });
 
+const OPENFGA_BASE_URL = process.env.OPENFGA_BASE_URL ?? 'http://localhost:8082';
+
+async function writeOpenFgaTuple(
+  storeId: string,
+  modelId: string,
+  tupleKey: { user: string; relation: string; object: string },
+  op: 'writes' | 'deletes'
+): Promise<void> {
+  const response = await fetch(`${OPENFGA_BASE_URL}/stores/${storeId}/write`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ [op]: { tuple_keys: [tupleKey] }, authorization_model_id: modelId }),
+  });
+  if (!response.ok) {
+    throw new Error(`OpenFGA ${op} failed: ${response.status} ${await response.text()}`);
+  }
+}
+
 test.describe('Authorization lab — negative space', () => {
   test.beforeEach(async ({ page, request }) => {
     await expectLiveOpenFga(request);
@@ -107,5 +125,30 @@ test.describe('Authorization lab — negative space', () => {
     await page.getByRole('button', { name: 'Run OpenFGA check' }).click();
 
     await expect(decision(page)).toHaveText('DENY');
+  });
+
+  test('a relationship revoked mid-session flips a live ALLOW to DENY', async ({ page, request }) => {
+    const diagnostics = await (await request.get('/api/access/diagnostics')).json() as {
+      storeId: string;
+      modelId: string;
+    };
+    const tupleKey = { user: 'user:erin', relation: 'viewer', object: 'project:orion' };
+
+    await writeOpenFgaTuple(diagnostics.storeId, diagnostics.modelId, tupleKey, 'writes');
+    try {
+      await page.getByLabel('User').fill('user:erin');
+      await page.locator('select[name="relation"]').selectOption('can_view');
+      await page.getByLabel('Object').fill('project:orion');
+      await page.getByRole('button', { name: 'Run OpenFGA check' }).click();
+      await expect(decision(page)).toHaveText('ALLOW');
+
+      await writeOpenFgaTuple(diagnostics.storeId, diagnostics.modelId, tupleKey, 'deletes');
+
+      await page.getByRole('button', { name: 'Run OpenFGA check' }).click();
+      await expect(decision(page)).toHaveText('DENY');
+    } finally {
+      // Best-effort cleanup in case the ALLOW assertion above failed before the delete ran.
+      await writeOpenFgaTuple(diagnostics.storeId, diagnostics.modelId, tupleKey, 'deletes').catch(() => undefined);
+    }
   });
 });
