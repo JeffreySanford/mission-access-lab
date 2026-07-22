@@ -17,7 +17,7 @@ Backend (`apps/authorization-wrapper`):
 
 - [x] `AuthorizationControllerTest` (`@WebMvcTest`) — valid check request, missing/blank fields → 400, malformed JSON → 400, `/diagnostics` live vs demo mode. Surfaced two Boot 4.1/Spring 7 breaking changes along the way: Jackson 3 renamed its package from `com.fasterxml.jackson` to `tools.jackson`, and `@WebMvcTest` moved from `spring-boot-test-autoconfigure` into a dedicated `spring-boot-starter-webmvc-test` starter (added as a testImplementation dependency).
 - [x] `OpenFgaAuthorizationAdapterTest` — mock `RestClient`: allow, deny, OpenFGA 5xx, OpenFGA timeout, malformed response body, demo-mode fallback when store/model unset.
-- [ ] `AuthorizationServiceTest` — extend existing test: verify audit event persisted with correct fields, telemetry called exactly once, transaction rollback behavior on adapter exception.
+- [x] `AuthorizationServiceTest` — extended: audit event persisted with the exact checked fields (via `ArgumentCaptor`), telemetry called exactly once, and adapter-failure propagation with no audit/telemetry side effects. (`@Transactional` rollback semantics need a Spring-context integration test — this is a plain POJO unit test with mocked collaborators, so the AOP proxy that would actually roll back a transaction is never in play; noted rather than faked.)
 - [ ] `AuthorizationAuditRepositoryTest` (`@DataJpaTest` against the `authorization_wrapper` schema) — save/find round-trip, schema-qualified table access.
 - [ ] `OpenFgaProperties` binding test — env var overrides, blank vs null store/model ID handling.
 
