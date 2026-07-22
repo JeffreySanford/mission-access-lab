@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { map, shareReplay, type Observable } from 'rxjs';
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- Angular DI needs the real value import for constructor injection.
 import { OperationsApiService } from '../../core/operations-api.service';
 import type { MetricPoint, OperationsViewModel, ServiceNode } from '../../core/operations.models';
 
@@ -11,16 +12,18 @@ import type { MetricPoint, OperationsViewModel, ServiceNode } from '../../core/o
   standalone: false,
 })
 export class OperationsOverviewComponent {
-  readonly viewModel$: Observable<OperationsViewModel> = this.operationsApi.watchSnapshot().pipe(
-    map((snapshot) => {
-      const paths = this.buildTrafficPaths(snapshot.requestSeries);
-      const total = Math.max(1, snapshot.allowedChecks + snapshot.deniedChecks);
-      return { ...snapshot, ...paths, allowPercent: snapshot.allowedChecks / total * 100, denyPercent: snapshot.deniedChecks / total * 100 };
-    }),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
+  readonly viewModel$: Observable<OperationsViewModel>;
 
-  constructor(private readonly operationsApi: OperationsApiService) {}
+  constructor(private readonly operationsApi: OperationsApiService) {
+    this.viewModel$ = this.operationsApi.watchSnapshot().pipe(
+      map((snapshot) => {
+        const paths = this.buildTrafficPaths(snapshot.requestSeries);
+        const total = Math.max(1, snapshot.allowedChecks + snapshot.deniedChecks);
+        return { ...snapshot, ...paths, allowPercent: snapshot.allowedChecks / total * 100, denyPercent: snapshot.deniedChecks / total * 100 };
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
 
   nodeById(nodes: ServiceNode[], id: string): ServiceNode | undefined { return nodes.find((node) => node.id === id); }
   maxLatency(items: Array<{ p95Ms: number }>): number { return Math.max(1, ...items.map((item) => item.p95Ms)); }

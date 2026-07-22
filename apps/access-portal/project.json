@@ -39,7 +39,9 @@
         "polyfills": ["zone.js", "zone.js/testing"],
         "tsConfig": "apps/access-portal/tsconfig.spec.json",
         "inlineStyleLanguage": "scss",
-        "styles": ["apps/access-portal/src/styles.scss"]
+        "styles": ["apps/access-portal/src/styles.scss"],
+        "browsers": "ChromeHeadless",
+        "watch": false
       }
     },
     "lint": { "executor": "@nx/eslint:lint" }

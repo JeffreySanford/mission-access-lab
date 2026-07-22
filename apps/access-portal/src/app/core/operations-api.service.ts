@@ -1,6 +1,8 @@
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- Angular DI needs the real value import for constructor injection.
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, interval, map, Observable, of, startWith, switchMap } from 'rxjs';
+import type { Observable} from 'rxjs';
+import { catchError, interval, of, startWith, switchMap } from 'rxjs';
 import type { OperationsSnapshot } from './operations.models';
 
 @Injectable({ providedIn: 'root' })

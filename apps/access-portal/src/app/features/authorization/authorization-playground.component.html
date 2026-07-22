@@ -1,3 +1,60 @@
 <section class="lab"><header><p>Interactive policy check</p><h1>Authorization lab</h1><span>Change a subject, relation, or object and watch the Java wrapper ask OpenFGA for a decision.</span></header>
-<div class="workbench"><form (ngSubmit)="runCheck()"><label>User<input [(ngModel)]="user" name="user" required /></label><label>Relation<select [(ngModel)]="relation" name="relation"><option>can_view</option><option>can_edit</option><option>can_manage</option></select></label><label>Object<input [(ngModel)]="object" name="object" required /></label><button type="submit" [disabled]="loading">{{ loading ? 'Checking…' : 'Run OpenFGA check' }}</button></form>
-<article class="result" [class.allowed]="result?.allowed" [class.denied]="result && !result.allowed"><ng-container *ngIf="result; else empty"><small>Decision {{ result.decisionId }}</small><strong>{{ result.allowed ? 'ALLOW' : 'DENY' }}</strong><p>{{ result.explanation }}</p><span>{{ result.latencyMs }} ms wrapper latency</span></ng-container><ng-template #empty><strong>No decision yet</strong><p>Run a check to exercise the complete REST → service → OpenFGA adapter path.</p></ng-template><p class="error" *ngIf="error">{{ error }}</p></article></div></section>
+
+<div class="diagnostics" [class.live]="diagnostics?.live" [class.demo]="diagnostics && !diagnostics.live">
+  <ng-container *ngIf="diagnostics; else diagLoading">
+    <span class="dot"></span>
+    <strong>{{ diagnostics.live ? 'LIVE — talking to OpenFGA' : 'DEMO MODE — no store/model configured' }}</strong>
+    <code *ngIf="diagnostics.live">store {{ diagnostics.storeId }} · model {{ diagnostics.modelId }}</code>
+    <code *ngIf="!diagnostics.live">run <em>pnpm fga:bootstrap</em> and set OPENFGA_STORE_ID / OPENFGA_MODEL_ID to go live</code>
+  </ng-container>
+  <ng-template #diagLoading><span class="dot"></span><strong>{{ diagnosticsError || 'Checking wrapper diagnostics…' }}</strong></ng-template>
+  <button type="button" class="refresh" (click)="loadDiagnostics()">Refresh</button>
+</div>
+
+<div class="presets">
+  <button type="button" *ngFor="let preset of presets" (click)="applyPreset(preset)" [class.expect-allow]="preset.expect === 'ALLOW'" [class.expect-deny]="preset.expect === 'DENY'">
+    {{ preset.label }} <small>({{ preset.expect }})</small>
+  </button>
+</div>
+
+<div class="workbench">
+<form (ngSubmit)="runCheck()">
+  <label>User
+    <input [(ngModel)]="user" name="user" required list="sample-users" />
+    <datalist id="sample-users"><option *ngFor="let sample of sampleUsers" [value]="sample"></option></datalist>
+  </label>
+  <label>Relation<select [(ngModel)]="relation" name="relation"><option>can_view</option><option>can_edit</option><option>can_manage</option></select></label>
+  <label>Object
+    <input [(ngModel)]="object" name="object" required list="sample-objects" />
+    <datalist id="sample-objects"><option *ngFor="let sample of sampleObjects" [value]="sample"></option></datalist>
+  </label>
+  <button type="submit" [disabled]="loading">{{ loading ? 'Checking…' : 'Run OpenFGA check' }}</button>
+</form>
+
+<article class="result" [class.allowed]="result?.allowed" [class.denied]="result && !result.allowed"><ng-container *ngIf="result; else empty"><small>Decision {{ result.decisionId }}</small><strong>{{ result.allowed ? 'ALLOW' : 'DENY' }}</strong><p>{{ result.explanation }}</p><span>{{ result.latencyMs }} ms wrapper latency</span></ng-container><ng-template #empty><strong>No decision yet</strong><p>Run a check to exercise the complete REST → service → OpenFGA adapter path.</p></ng-template><p class="error" *ngIf="error">{{ error }}</p></article>
+</div>
+
+<div class="seed-reference">
+  <h2>Seeded relationships</h2>
+  <p>These tuples were written by <code>pnpm fga:bootstrap</code>. Every decision above is derived from this graph.</p>
+  <table>
+    <thead><tr><th>User</th><th>Relation</th><th>Object</th></tr></thead>
+    <tbody><tr *ngFor="let tuple of seededRelationships"><td>{{ tuple.user }}</td><td>{{ tuple.relation }}</td><td>{{ tuple.object }}</td></tr></tbody>
+  </table>
+</div>
+
+<div class="rbac-comparison">
+  <h2>RBAC vs. ReBAC — what's actually different</h2>
+  <p>Most teams reach for role-based access control (RBAC) by default: users get roles, roles carry permissions. OpenFGA implements <strong>relationship-based access control (ReBAC)</strong> instead — permissions are computed by walking a graph of relationships, not by looking up a role table.</p>
+  <table>
+    <thead><tr><th></th><th>Traditional RBAC</th><th>OpenFGA ReBAC</th></tr></thead>
+    <tbody>
+      <tr *ngFor="let row of rbacComparison"><th scope="row">{{ row.aspect }}</th><td>{{ row.rbac }}</td><td>{{ row.rebac }}</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <p><strong>Prove it:</strong> <code>user:carol</code> has exactly one tuple in the whole graph — <code>administrator</code> on <code>organization:mission</code>. She has <em>no</em> role or tuple naming <code>project:orion</code> directly. In a naive RBAC system that's an automatic DENY. Run the check and see what OpenFGA does instead.</p>
+    <button type="button" (click)="applyPreset(carolPreset)">Check carol's edit access to project:orion</button>
+  </div>
+</div>
+</section>
