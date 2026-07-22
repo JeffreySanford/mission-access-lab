@@ -83,6 +83,14 @@
         "outputDir": "apps/access-portal/storybook-static",
         "compodoc": false
       }
+    },
+    "e2e-resilience": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "apps/access-portal",
+        "command": "playwright test --config=playwright.resilience.config.mts"
+      }
     }
   }
 }

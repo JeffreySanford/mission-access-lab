@@ -23,6 +23,11 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
  */
 export default defineConfig({
   ...nxE2EPreset(import.meta.dirname, { testDir: './e2e' }),
+  // The infra-restart resilience suite (e2e/resilience/**) mutates live containers
+  // mid-test and is deliberately excluded from this default target — it runs via its
+  // own playwright.resilience.config.mts (`pnpm run e2e:resilience`), not as part of
+  // the fast golden-path suite verify:release gates on.
+  testIgnore: '**/resilience/**',
   // There is exactly one dev server instance (reuseExistingServer / a single Vite
   // process), not one per worker. Concurrent test files navigating it simultaneously
   // was observed to trip a spurious <vite-error-overlay> that blocks clicks — serialize

@@ -52,6 +52,7 @@ services:
       OPENFGA_STORE_ID: ${OPENFGA_STORE_ID:-}
       OPENFGA_MODEL_ID: ${OPENFGA_MODEL_ID:-}
       OIDC_ISSUER_URI: "http://keycloak:8080/realms/mission-access"
+      SECURITY_ENABLED: ${SECURITY_ENABLED:-false}
     depends_on:
       postgres: { condition: service_healthy }
       openfga: { condition: service_healthy }

@@ -21,7 +21,8 @@
     "fga:test": "node tools/openfga/test-model.mjs",
     "verify": "node tools/verify-workspace.mjs",
     "verify:e2e-contract": "node tools/verify-e2e-contract.mjs",
-    "verify:release": "node tools/verify-release.mjs"
+    "verify:release": "node tools/verify-release.mjs",
+    "e2e:resilience": "nx run access-portal:e2e-resilience"
   },
   "dependencies": {
     "@angular/animations": "22.0.7",
