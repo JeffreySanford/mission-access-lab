@@ -16,7 +16,7 @@
     "infra:down": "nx run infra:down",
     "infra:reset": "nx run infra:reset",
     "fga:bootstrap": "node tools/openfga/bootstrap.mjs",
-    "fga:test": "docker run --rm -v \"${PWD}/authorization:/authorization\" openfga/cli:v0.7.15 model test --tests /authorization/model-tests.yaml",
+    "fga:test": "node tools/openfga/test-model.mjs",
     "verify": "node tools/verify-workspace.mjs"
   },
   "dependencies": {
