@@ -11,7 +11,7 @@ Tracked scope from the 2026-07-21/22 session: linting is done (see below); the r
 - [x] Fixed CI (was written for npm on a pnpm repo; `./gradlew test` couldn't work since the wrapper JAR isn't checked in). Added YAML linting (`eslint-plugin-yml` + `docker compose config`) after an unquoted `postgres://` URI in a flow-style mapping broke CI's stricter Docker Compose parser — caught the exact class of bug that slipped through review.
 - [x] Added `pnpm run verify:release`: a single pre-commit/pre-push gate (workspace sanity, lint, unit tests, build) with a pass/fail summary and non-zero exit on failure. E2E and Storybook report as explicitly PENDING until sections 2 and 3 below land — no false confidence, and it auto-picks them up once their Nx targets exist.
 
-## 1. Unit tests, verbose, every aspect
+## 1. Unit tests, verbose, every aspect — done
 
 Backend (`apps/authorization-wrapper`):
 
@@ -23,9 +23,9 @@ Backend (`apps/authorization-wrapper`):
 
 Frontend (`apps/access-portal`):
 
-- [ ] `AuthorizationPlaygroundComponent` — extend existing spec: diagnostics load success/failure, `runCheck` success/error/loading states, preset application, `OnPush` change-detection regression test (this exact bug bit us this session — assert `markForCheck` is called, not just that state mutates).
-- [ ] `OperationsApiService` — polling interval, `catchError` fallback to demo snapshot, HTTP error handling.
-- [ ] `OperationsOverviewComponent` — extend existing test with the `viewModel$` constructor-timing regression (also bit us this session) as an explicit case.
+- [x] `AuthorizationPlaygroundComponent` — new spec: diagnostics load success/failure, `runCheck` success/error/loading, `applyPreset`, and the `OnPush`/`markForCheck` regression. Writing this surfaced a real DI-resolution gotcha: neither overriding `ChangeDetectorRef` via `TestBed` providers nor re-resolving it through `fixture.debugElement.injector` or `fixture.componentRef.injector` landed on the instance the component actually calls `.markForCheck()` on — had to spy on the component's own stored reference directly (`private` is compile-time only). Worth remembering for any future OnPush change-detection test in this repo.
+- [x] `OperationsApiService` — polling interval (`fakeAsync`/`tick`), `catchError` fallback to demo snapshot, HTTP error handling. `interval(3000)` polls forever, so leaving a subscription open trips the *next* test's `httpMock.verify()` — unsubscribing has to happen inside the same `fakeAsync` zone, not a plain `afterEach`, or the virtual clock's teardown bookkeeping gets inconsistent.
+- [x] `OperationsOverviewComponent` — extended with the `viewModel$` constructor-timing regression case, plus `nodeById`/`maxLatency` edge cases and an empty-request-series case.
 
 Edge cases worth naming explicitly rather than leaving implicit: empty user/relation/object strings, unicode in user IDs, very long object identifiers, concurrent checks for the same tuple, OpenFGA store ID present but model ID absent (and vice versa).
 
