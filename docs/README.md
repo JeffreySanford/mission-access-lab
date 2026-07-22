@@ -6,6 +6,7 @@
 | [Operations dashboard](operations-dashboard.md) | Visualizations, telemetry contract, RxJS polling, and SCSS animation choices |
 | [OpenFGA model](openfga-model.md) | Relations, inheritance, tuples, checks, and model versioning |
 | [Testing strategy](testing-strategy.md) | Unit, integration, model, E2E, negative-space, and performance tests |
+| [Next work](next-work.md) | Tracked backlog: verbose unit tests, Storybook, E2E, security review |
 | [Skills gap and code map](skills-gap-and-code-map.md) | Practice priorities and exact code locations |
 | [Local development](local-development.md) | Installation and run sequence |
 | [Troubleshooting](troubleshooting.md) | Common failures and diagnostic commands |
