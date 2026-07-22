@@ -11,7 +11,7 @@ services:
     container_name: mission-openfga-migrate
     image: openfga/openfga:v1.15.1
     command: migrate
-    environment: { OPENFGA_DATASTORE_ENGINE: postgres, OPENFGA_DATASTORE_URI: postgres://mission:mission@postgres:5432/mission_access?sslmode=disable }
+    environment: { OPENFGA_DATASTORE_ENGINE: postgres, OPENFGA_DATASTORE_URI: "postgres://mission:mission@postgres:5432/mission_access?sslmode=disable" }
     depends_on: { postgres: { condition: service_healthy } }
   openfga:
     container_name: mission-openfga
@@ -19,7 +19,7 @@ services:
     command: run
     environment:
       OPENFGA_DATASTORE_ENGINE: postgres
-      OPENFGA_DATASTORE_URI: postgres://mission:mission@postgres:5432/mission_access?sslmode=disable
+      OPENFGA_DATASTORE_URI: "postgres://mission:mission@postgres:5432/mission_access?sslmode=disable"
       OPENFGA_LOG_FORMAT: json
       OPENFGA_PLAYGROUND_ENABLED: "true"
       OPENFGA_PLAYGROUND_PORT: "3000"
@@ -43,13 +43,13 @@ services:
     command: gradle bootRun --no-daemon
     ports: ["8080:8080"]
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/mission_access
+      DB_URL: "jdbc:postgresql://postgres:5432/mission_access"
       DB_USER: mission
       DB_PASSWORD: mission
-      OPENFGA_BASE_URL: http://openfga:8080
+      OPENFGA_BASE_URL: "http://openfga:8080"
       OPENFGA_STORE_ID: ${OPENFGA_STORE_ID:-}
       OPENFGA_MODEL_ID: ${OPENFGA_MODEL_ID:-}
-      OIDC_ISSUER_URI: http://keycloak:8080/realms/mission-access
+      OIDC_ISSUER_URI: "http://keycloak:8080/realms/mission-access"
     depends_on:
       postgres: { condition: service_healthy }
       openfga: { condition: service_healthy }
