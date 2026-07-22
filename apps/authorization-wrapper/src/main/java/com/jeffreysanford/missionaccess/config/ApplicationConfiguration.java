@@ -8,7 +8,8 @@ import org.springframework.web.client.RestClient;
 @Configuration
 @EnableConfigurationProperties(OpenFgaProperties.class)
 public class ApplicationConfiguration {
-    @Bean RestClient openFgaRestClient(RestClient.Builder builder, OpenFgaProperties properties) {
-        return builder.baseUrl(properties.baseUrl()).build();
-    }
+  @Bean
+  RestClient openFgaRestClient(RestClient.Builder builder, OpenFgaProperties properties) {
+    return builder.baseUrl(properties.baseUrl()).build();
+  }
 }

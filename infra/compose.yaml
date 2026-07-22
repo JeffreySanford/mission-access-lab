@@ -1,16 +1,20 @@
+name: mission
 services:
   postgres:
+    container_name: mission-postgres
     image: postgres:17-alpine
     environment: { POSTGRES_DB: mission_access, POSTGRES_USER: mission, POSTGRES_PASSWORD: mission }
     ports: ["5432:5432"]
     healthcheck: { test: ["CMD-SHELL", "pg_isready -U mission -d mission_access"], interval: 5s, timeout: 3s, retries: 15 }
-    volumes: ["mission-postgres:/var/lib/postgresql/data"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
   openfga-migrate:
+    container_name: mission-openfga-migrate
     image: openfga/openfga:v1.15.1
     command: migrate
     environment: { OPENFGA_DATASTORE_ENGINE: postgres, OPENFGA_DATASTORE_URI: postgres://mission:mission@postgres:5432/mission_access?sslmode=disable }
     depends_on: { postgres: { condition: service_healthy } }
   openfga:
+    container_name: mission-openfga
     image: openfga/openfga:v1.15.1
     command: run
     environment:
@@ -23,8 +27,30 @@ services:
     depends_on: { openfga-migrate: { condition: service_completed_successfully } }
     healthcheck: { test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=localhost:8081"], interval: 5s, timeout: 3s, retries: 15 }
   keycloak:
+    container_name: mission-keycloak
     image: quay.io/keycloak/keycloak:26.3
     command: start-dev --http-port=8080
     environment: { KC_BOOTSTRAP_ADMIN_USERNAME: admin, KC_BOOTSTRAP_ADMIN_PASSWORD: admin }
     ports: ["8081:8080"]
-volumes: { mission-postgres: {} }
+  authorization-wrapper:
+    container_name: mission-authorization-wrapper
+    image: gradle:8.14.3-jdk21
+    working_dir: /workspace
+    volumes:
+      - "../apps/authorization-wrapper:/workspace"
+      - "gradle-cache:/home/gradle/.gradle"
+      - "gradle-cache-tasks:/home/gradle/.gradle-tasks"
+    command: gradle bootRun --no-daemon
+    ports: ["8080:8080"]
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/mission_access
+      DB_USER: mission
+      DB_PASSWORD: mission
+      OPENFGA_BASE_URL: http://openfga:8080
+      OPENFGA_STORE_ID: ${OPENFGA_STORE_ID:-}
+      OPENFGA_MODEL_ID: ${OPENFGA_MODEL_ID:-}
+      OIDC_ISSUER_URI: http://keycloak:8080/realms/mission-access
+    depends_on:
+      postgres: { condition: service_healthy }
+      openfga: { condition: service_healthy }
+volumes: { postgres-data: {}, gradle-cache: {}, gradle-cache-tasks: {} }

@@ -9,10 +9,19 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfiguration {
-    @Bean SecurityFilterChain securityFilterChain(HttpSecurity http, @Value("${app.security.enabled:false}") boolean enabled) throws Exception {
-        http.csrf(csrf -> csrf.disable());
-        if (enabled) http.authorizeHttpRequests(auth -> auth.requestMatchers("/actuator/health", "/actuator/info").permitAll().anyRequest().authenticated()).oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()));
-        else http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-        return http.build();
-    }
+  @Bean
+  SecurityFilterChain securityFilterChain(
+      HttpSecurity http, @Value("${app.security.enabled:false}") boolean enabled) throws Exception {
+    http.csrf(csrf -> csrf.disable());
+    if (enabled)
+      http.authorizeHttpRequests(
+              auth ->
+                  auth.requestMatchers("/actuator/health", "/actuator/info")
+                      .permitAll()
+                      .anyRequest()
+                      .authenticated())
+          .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()));
+    else http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+    return http.build();
+  }
 }

@@ -4,4 +4,5 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("app.openfga")
-public record OpenFgaProperties(String baseUrl, String storeId, String modelId, Duration requestTimeout) {}
+public record OpenFgaProperties(
+    String baseUrl, String storeId, String modelId, Duration requestTimeout) {}

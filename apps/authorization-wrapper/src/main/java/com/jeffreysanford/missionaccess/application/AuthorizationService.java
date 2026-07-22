@@ -12,12 +12,33 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthorizationService {
-    private final AuthorizationPort authorizationPort; private final AuthorizationAuditRepository auditRepository; private final OperationsTelemetryService telemetry;
-    public AuthorizationService(AuthorizationPort authorizationPort, AuthorizationAuditRepository auditRepository, OperationsTelemetryService telemetry) { this.authorizationPort = authorizationPort; this.auditRepository = auditRepository; this.telemetry = telemetry; }
-    @Transactional public AuthorizationDecision check(String user, String relation, String object) {
-        AuthorizationDecision decision = authorizationPort.check(user, relation, object);
-        auditRepository.save(new AuthorizationAuditEvent(UUID.randomUUID(), Instant.now(), user, relation, object, decision.allowed(), decision.latencyMs(), decision.explanation()));
-        telemetry.recordDecision(user, relation, object, decision);
-        return decision;
-    }
+  private final AuthorizationPort authorizationPort;
+  private final AuthorizationAuditRepository auditRepository;
+  private final OperationsTelemetryService telemetry;
+
+  public AuthorizationService(
+      AuthorizationPort authorizationPort,
+      AuthorizationAuditRepository auditRepository,
+      OperationsTelemetryService telemetry) {
+    this.authorizationPort = authorizationPort;
+    this.auditRepository = auditRepository;
+    this.telemetry = telemetry;
+  }
+
+  @Transactional
+  public AuthorizationDecision check(String user, String relation, String object) {
+    AuthorizationDecision decision = authorizationPort.check(user, relation, object);
+    auditRepository.save(
+        new AuthorizationAuditEvent(
+            UUID.randomUUID(),
+            Instant.now(),
+            user,
+            relation,
+            object,
+            decision.allowed(),
+            decision.latencyMs(),
+            decision.explanation()));
+    telemetry.recordDecision(user, relation, object, decision);
+    return decision;
+  }
 }

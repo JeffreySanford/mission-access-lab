@@ -5,9 +5,10 @@
   "sourceRoot": "apps/authorization-wrapper/src/main/java",
   "tags": ["scope:authorization", "type:app", "language:java"],
   "targets": {
-    "serve": { "executor": "nx:run-commands", "continuous": true, "options": { "cwd": "apps/authorization-wrapper", "command": "./gradlew bootRun" } },
-    "build": { "executor": "nx:run-commands", "outputs": ["{projectRoot}/build"], "options": { "cwd": "apps/authorization-wrapper", "command": "./gradlew build" } },
-    "test": { "executor": "nx:run-commands", "outputs": ["{projectRoot}/build/test-results", "{projectRoot}/build/reports/tests"], "options": { "cwd": "apps/authorization-wrapper", "command": "./gradlew test" } },
-    "clean": { "executor": "nx:run-commands", "options": { "cwd": "apps/authorization-wrapper", "command": "./gradlew clean" } }
+    "serve": { "executor": "nx:run-commands", "continuous": true, "dependsOn": [{ "target": "ensure", "projects": ["infra"] }], "options": { "command": "docker compose -f infra/compose.yaml up authorization-wrapper" } },
+    "build": { "executor": "nx:run-commands", "outputs": ["{projectRoot}/build"], "options": { "command": "docker compose -f infra/compose.yaml run --rm -e GRADLE_USER_HOME=/home/gradle/.gradle-tasks authorization-wrapper gradle --project-cache-dir /home/gradle/.gradle-tasks-project build --no-daemon" } },
+    "test": { "executor": "nx:run-commands", "outputs": ["{projectRoot}/build/test-results", "{projectRoot}/build/reports/tests"], "options": { "command": "docker compose -f infra/compose.yaml run --rm -e GRADLE_USER_HOME=/home/gradle/.gradle-tasks authorization-wrapper gradle --project-cache-dir /home/gradle/.gradle-tasks-project test --no-daemon" } },
+    "clean": { "executor": "nx:run-commands", "options": { "command": "docker compose -f infra/compose.yaml run --rm -e GRADLE_USER_HOME=/home/gradle/.gradle-tasks authorization-wrapper gradle --project-cache-dir /home/gradle/.gradle-tasks-project clean --no-daemon" } },
+    "lint": { "executor": "nx:run-commands", "options": { "command": "docker compose -f infra/compose.yaml run --rm -e GRADLE_USER_HOME=/home/gradle/.gradle-tasks authorization-wrapper gradle --project-cache-dir /home/gradle/.gradle-tasks-project spotlessCheck --no-daemon" } }
   }
 }

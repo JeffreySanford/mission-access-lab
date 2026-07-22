@@ -11,8 +11,12 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate.default_schema: authorization_wrapper
   flyway:
     enabled: true
+    schemas: [authorization_wrapper]
+    default-schema: authorization_wrapper
   security:
     oauth2:
       resourceserver:
