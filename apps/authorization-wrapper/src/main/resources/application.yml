@@ -32,6 +32,11 @@ management:
       show-details: always
 app:
   security:
+    # Intentionally off by default: this is a ReBAC/OpenFGA demo lab, and leaving JWT
+    # auth off keeps the diagnostics/playground UI and E2E suite frictionless without
+    # wiring Keycloak token issuance into the frontend. Set SECURITY_ENABLED=true (and
+    # supply a bearer token) to exercise the real oauth2ResourceServer JWT path — the
+    # controller/service layer already enforces it correctly when enabled.
     enabled: ${SECURITY_ENABLED:false}
   openfga:
     base-url: ${OPENFGA_BASE_URL:http://localhost:8082}

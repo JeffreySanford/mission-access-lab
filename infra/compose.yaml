@@ -1,3 +1,5 @@
+# All credentials below (postgres/keycloak admin) are intentionally plaintext, lab-only
+# defaults — this is a local training environment, not a deployment pattern to copy.
 name: mission
 services:
   postgres:
