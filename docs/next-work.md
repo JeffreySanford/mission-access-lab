@@ -9,12 +9,13 @@ Tracked scope from the 2026-07-21/22 session: linting is done (see below); the r
 - [x] Wired `pnpm lint` to cover both projects; isolated Gradle's cache locks (`GRADLE_USER_HOME`, `--project-cache-dir`) so `build`/`test`/`lint`/`clean` no longer deadlock against the live `serve` container.
 - [x] Confirmed JPA usage (`AuthorizationAuditEvent` entity + `AuthorizationAuditRepository`) and DTO usage (validated Java records at the REST boundary: `CheckRequest`, `Diagnostics`, `AuthorizationDecision`).
 - [x] Fixed CI (was written for npm on a pnpm repo; `./gradlew test` couldn't work since the wrapper JAR isn't checked in). Added YAML linting (`eslint-plugin-yml` + `docker compose config`) after an unquoted `postgres://` URI in a flow-style mapping broke CI's stricter Docker Compose parser — caught the exact class of bug that slipped through review.
+- [x] Added `pnpm run verify:release`: a single pre-commit/pre-push gate (workspace sanity, lint, unit tests, build) with a pass/fail summary and non-zero exit on failure. E2E and Storybook report as explicitly PENDING until sections 2 and 3 below land — no false confidence, and it auto-picks them up once their Nx targets exist.
 
 ## 1. Unit tests, verbose, every aspect
 
 Backend (`apps/authorization-wrapper`):
 
-- [ ] `AuthorizationControllerTest` (`@WebMvcTest`) — valid check request, missing/blank fields → 400, malformed JSON → 400, `/diagnostics` live vs demo mode.
+- [x] `AuthorizationControllerTest` (`@WebMvcTest`) — valid check request, missing/blank fields → 400, malformed JSON → 400, `/diagnostics` live vs demo mode. Surfaced two Boot 4.1/Spring 7 breaking changes along the way: Jackson 3 renamed its package from `com.fasterxml.jackson` to `tools.jackson`, and `@WebMvcTest` moved from `spring-boot-test-autoconfigure` into a dedicated `spring-boot-starter-webmvc-test` starter (added as a testImplementation dependency).
 - [x] `OpenFgaAuthorizationAdapterTest` — mock `RestClient`: allow, deny, OpenFGA 5xx, OpenFGA timeout, malformed response body, demo-mode fallback when store/model unset.
 - [ ] `AuthorizationServiceTest` — extend existing test: verify audit event persisted with correct fields, telemetry called exactly once, transaction rollback behavior on adapter exception.
 - [ ] `AuthorizationAuditRepositoryTest` (`@DataJpaTest` against the `authorization_wrapper` schema) — save/find round-trip, schema-qualified table access.
