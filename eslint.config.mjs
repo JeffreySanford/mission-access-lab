@@ -12,6 +12,9 @@ export default [
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
+      // This workspace deliberately uses NgModules + constructor injection, not standalone components.
+      '@angular-eslint/prefer-standalone': 'off',
+      '@angular-eslint/prefer-inject': 'off',
     },
   },
 ];

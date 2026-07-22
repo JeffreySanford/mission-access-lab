@@ -4,6 +4,7 @@ tmp/
 .nx/
 .angular/
 .gradle/
+.gradle-*/
 build/
 **/build/
 .idea/
