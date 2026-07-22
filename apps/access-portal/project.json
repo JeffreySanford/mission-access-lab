@@ -8,6 +8,7 @@
     "build": {
       "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/access-portal",
         "index": "apps/access-portal/src/index.html",
@@ -15,14 +16,30 @@
         "polyfills": ["zone.js"],
         "tsConfig": "apps/access-portal/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
-        "assets": [{"glob": "**/*", "input": "apps/access-portal/public"}],
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/access-portal/public"
+          }
+        ],
         "styles": ["apps/access-portal/src/styles.scss"]
       },
       "configurations": {
-        "production": { "outputHashing": "all", "budgets": [{"type": "initial", "maximumWarning": "700kB", "maximumError": "1MB"}] },
-        "development": { "optimization": false, "sourceMap": true }
-      },
-      "defaultConfiguration": "production"
+        "production": {
+          "outputHashing": "all",
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "700kB",
+              "maximumError": "1MB"
+            }
+          ]
+        },
+        "development": {
+          "optimization": false,
+          "sourceMap": true
+        }
+      }
     },
     "serve": {
       "executor": "@angular/build:dev-server",
@@ -44,7 +61,9 @@
         "watch": false
       }
     },
-    "lint": { "executor": "@nx/eslint:lint" },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
     "storybook": {
       "executor": "@storybook/angular:start-storybook",
       "continuous": true,

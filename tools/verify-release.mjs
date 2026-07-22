@@ -1,5 +1,4 @@
 import { spawnSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 
 const steps = [];
 
@@ -17,10 +16,18 @@ function pending(name, reason) {
   steps.push({ name, pending: true, reason });
 }
 
-async function hasNxTarget(projectJsonPath, target) {
+// Queries Nx's resolved project graph rather than reading project.json directly, so
+// this also detects targets registered via inferred plugins (e.g. @nx/playwright's
+// "e2e" target, which is never an explicit key in project.json).
+function hasNxTarget(project, target) {
+  const result = spawnSync('pnpm', ['exec', 'nx', 'show', 'project', project, '--json'], {
+    encoding: 'utf8',
+    shell: true,
+  });
+  if (result.status !== 0) return false;
   try {
-    const project = JSON.parse(await readFile(projectJsonPath, 'utf8'));
-    return Boolean(project.targets?.[target]);
+    const parsed = JSON.parse(result.stdout);
+    return Boolean(parsed.targets?.[target]);
   } catch {
     return false;
   }
@@ -31,13 +38,13 @@ run('Lint (TypeScript, Java, YAML, docker compose)', 'pnpm', ['run', 'lint']);
 run('Unit tests (Angular + Spring Boot)', 'pnpm', ['run', 'test']);
 run('Build', 'pnpm', ['run', 'build']);
 
-if (await hasNxTarget('apps/access-portal/project.json', 'e2e')) {
+if (hasNxTarget('access-portal', 'e2e')) {
   run('E2E tests', 'pnpm', ['exec', 'nx', 'run', 'access-portal:e2e']);
 } else {
   pending('E2E tests', 'not implemented yet — see docs/next-work.md, section 3');
 }
 
-if (await hasNxTarget('apps/access-portal/project.json', 'storybook')) {
+if (hasNxTarget('access-portal', 'storybook')) {
   run('Storybook build', 'pnpm', ['exec', 'nx', 'run', 'access-portal:build-storybook']);
 } else {
   pending('Storybook', 'not implemented yet — see docs/next-work.md, section 2');

@@ -1,11 +1,11 @@
 package com.jeffreysanford.missionaccess.infrastructure.openfga;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withNoContent;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.jeffreysanford.missionaccess.config.OpenFgaProperties;
@@ -14,9 +14,9 @@ import java.io.IOException;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 class OpenFgaAuthorizationAdapterTest {
@@ -132,7 +132,29 @@ class OpenFgaAuthorizationAdapterTest {
   }
 
   @Test
-  void liveModePropagatesServerErrorsFromOpenFga() {
+  void liveModeFailsClosedWhenOpenFgaRejectsAMalformedRequest() {
+    OpenFgaProperties properties =
+        new OpenFgaProperties("http://openfga:8080", "store-1", "model-1", Duration.ofSeconds(2));
+    MockRestServiceServer[] serverOut = new MockRestServiceServer[1];
+    OpenFgaAuthorizationAdapter adapter = adapterWithServer(properties, serverOut);
+    serverOut[0]
+        .expect(requestTo("http://openfga:8080/stores/store-1/check"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withStatus(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    "{\"code\":\"validation_error\",\"message\":\"invalid 'object' field format\"}"));
+
+    AuthorizationDecision decision = adapter.check("user:alice", "can_edit", "not-a-valid-object");
+
+    assertThat(decision.allowed()).isFalse();
+    assertThat(decision.explanation()).contains("OpenFGA rejected the request");
+    serverOut[0].verify();
+  }
+
+  @Test
+  void liveModeFailsClosedWhenOpenFgaReturnsAServerError() {
     OpenFgaProperties properties =
         new OpenFgaProperties("http://openfga:8080", "store-1", "model-1", Duration.ofSeconds(2));
     MockRestServiceServer[] serverOut = new MockRestServiceServer[1];
@@ -142,13 +164,15 @@ class OpenFgaAuthorizationAdapterTest {
         .andExpect(method(HttpMethod.POST))
         .andRespond(withServerError());
 
-    assertThatThrownBy(() -> adapter.check("user:carol", "can_edit", "project:orion"))
-        .isInstanceOf(org.springframework.web.client.HttpServerErrorException.class);
+    AuthorizationDecision decision = adapter.check("user:carol", "can_edit", "project:orion");
+
+    assertThat(decision.allowed()).isFalse();
+    assertThat(decision.explanation()).contains("OpenFGA is unavailable");
     serverOut[0].verify();
   }
 
   @Test
-  void liveModePropagatesConnectionFailuresAsTimeouts() {
+  void liveModeFailsClosedOnConnectionFailure() {
     OpenFgaProperties properties =
         new OpenFgaProperties("http://openfga:8080", "store-1", "model-1", Duration.ofSeconds(2));
     MockRestServiceServer[] serverOut = new MockRestServiceServer[1];
@@ -161,9 +185,10 @@ class OpenFgaAuthorizationAdapterTest {
               throw new IOException("simulated network timeout");
             });
 
-    assertThatThrownBy(() -> adapter.check("user:carol", "can_edit", "project:orion"))
-        .isInstanceOf(ResourceAccessException.class)
-        .hasCauseInstanceOf(IOException.class);
+    AuthorizationDecision decision = adapter.check("user:carol", "can_edit", "project:orion");
+
+    assertThat(decision.allowed()).isFalse();
+    assertThat(decision.explanation()).contains("OpenFGA is unavailable");
     serverOut[0].verify();
   }
 }

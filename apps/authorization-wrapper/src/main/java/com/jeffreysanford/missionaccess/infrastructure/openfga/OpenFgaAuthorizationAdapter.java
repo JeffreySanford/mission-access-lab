@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 @Component
 public class OpenFgaAuthorizationAdapter implements AuthorizationPort {
@@ -39,13 +41,31 @@ public class OpenFgaAuthorizationAdapter implements AuthorizationPort {
             properties.modelId(),
             "tuple_key",
             Map.of("user", user, "relation", relation, "object", object));
-    OpenFgaCheckResponse response =
-        restClient
-            .post()
-            .uri("/stores/{storeId}/check", properties.storeId())
-            .body(request)
-            .retrieve()
-            .body(OpenFgaCheckResponse.class);
+    OpenFgaCheckResponse response;
+    try {
+      response =
+          restClient
+              .post()
+              .uri("/stores/{storeId}/check", properties.storeId())
+              .body(request)
+              .retrieve()
+              .body(OpenFgaCheckResponse.class);
+    } catch (HttpClientErrorException e) {
+      // 4xx: our request was malformed (e.g. an invalid object/relation identifier).
+      // Fail closed rather than surfacing an opaque 500 to the caller.
+      return new AuthorizationDecision(
+          false,
+          UUID.randomUUID().toString(),
+          Duration.between(started, Instant.now()).toMillis(),
+          "OpenFGA rejected the request: " + e.getStatusText());
+    } catch (RestClientException e) {
+      // 5xx or a connection failure: OpenFGA itself is unavailable. Fail closed here too.
+      return new AuthorizationDecision(
+          false,
+          UUID.randomUUID().toString(),
+          Duration.between(started, Instant.now()).toMillis(),
+          "OpenFGA is unavailable: " + e.getMessage());
+    }
     long latency = Duration.between(started, Instant.now()).toMillis();
     boolean allowed = response != null && response.allowed();
     return new AuthorizationDecision(
