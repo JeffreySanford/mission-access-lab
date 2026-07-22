@@ -1,4 +1,4 @@
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 
 /**
  * These tests hit the real containerized stack (Angular dev server -> Spring Boot
@@ -12,10 +12,38 @@ function decision(page: Page): Locator {
   return page.locator('article.result strong');
 }
 
+async function expectLiveOpenFga(request: APIRequestContext): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const response = await request.get('/api/access/diagnostics');
+        if (!response.ok()) return `HTTP ${response.status()}`;
+        const diagnostics = await response.json() as { live?: boolean; storeId?: string | null; modelId?: string | null };
+        if (!diagnostics.live) return 'demo';
+        if (!diagnostics.storeId || !diagnostics.modelId) return 'missing ids';
+        return 'live';
+      },
+      {
+        message: 'authorization E2E requires the wrapper to be live against a bootstrapped OpenFGA store/model',
+        timeout: 30_000,
+      }
+    )
+    .toBe('live');
+}
+
+test.describe('Authorization API readiness', () => {
+  // eslint-disable-next-line playwright/expect-expect -- expectLiveOpenFga wraps expect.poll with a clearer failure message.
+  test('has a live OpenFGA-backed API before UI checks run', async ({ request }) => {
+    await expectLiveOpenFga(request);
+  });
+});
+
 test.describe('Authorization lab — golden paths', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }) => {
+    await expectLiveOpenFga(request);
     await page.goto('/authorization');
     await expect(page.getByRole('heading', { name: 'Authorization lab' })).toBeVisible();
+    await expect(page.getByText('LIVE — talking to OpenFGA')).toBeVisible({ timeout: 15_000 });
   });
 
   test('reports a live connection to OpenFGA', async ({ page }) => {
@@ -56,9 +84,11 @@ test.describe('Authorization lab — golden paths', () => {
 });
 
 test.describe('Authorization lab — negative space', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }) => {
+    await expectLiveOpenFga(request);
     await page.goto('/authorization');
     await expect(page.getByRole('heading', { name: 'Authorization lab' })).toBeVisible();
+    await expect(page.getByText('LIVE — talking to OpenFGA')).toBeVisible({ timeout: 15_000 });
   });
 
   test('a malformed object string is handled gracefully (denied, not a crash)', async ({ page }) => {

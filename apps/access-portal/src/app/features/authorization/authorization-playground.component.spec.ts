@@ -68,6 +68,28 @@ describe('AuthorizationPlaygroundComponent', () => {
 
       expect(component.diagnostics?.live).toBeTrue();
     });
+
+    it('clears stale diagnostics before a refresh request resolves', () => {
+      fixture.detectChanges();
+      httpMock.expectOne('/api/access/diagnostics').flush({ live: true, openfgaBaseUrl: 'http://openfga:8080', storeId: 's1', modelId: 'm1' });
+
+      component.loadDiagnostics();
+
+      expect(component.diagnostics).toBeUndefined();
+      httpMock.expectOne('/api/access/diagnostics').flush({ live: true, openfgaBaseUrl: 'http://openfga:8080', storeId: 's2', modelId: 'm2' });
+    });
+
+    it('does not leave stale live diagnostics visible after a refresh failure', () => {
+      fixture.detectChanges();
+      httpMock.expectOne('/api/access/diagnostics').flush({ live: true, openfgaBaseUrl: 'http://openfga:8080', storeId: 's1', modelId: 'm1' });
+
+      component.loadDiagnostics();
+      const request = httpMock.expectOne('/api/access/diagnostics');
+      request.error(new ProgressEvent('network error'));
+
+      expect(component.diagnostics).toBeUndefined();
+      expect(component.diagnosticsError).toContain('unavailable');
+    });
   });
 
   describe('runCheck', () => {
@@ -103,6 +125,27 @@ describe('AuthorizationPlaygroundComponent', () => {
       expect(component.loading).toBeFalse();
       expect(component.error).toContain('unavailable');
       expect(markForCheckSpy).toHaveBeenCalled();
+    });
+
+    it('clears the previous decision while a new check is in flight', () => {
+      component.result = { allowed: true, decisionId: 'old', latencyMs: 1, explanation: 'old allow' };
+
+      component.runCheck();
+
+      expect(component.result).toBeUndefined();
+      httpMock.expectOne('/api/access/check').flush({ allowed: false, decisionId: 'new', latencyMs: 4, explanation: 'denied' });
+      expect(component.result?.allowed).toBeFalse();
+    });
+
+    it('does not leave a stale decision visible after a check failure', () => {
+      component.result = { allowed: true, decisionId: 'old', latencyMs: 1, explanation: 'old allow' };
+
+      component.runCheck();
+      const request = httpMock.expectOne('/api/access/check');
+      request.error(new ProgressEvent('network error'));
+
+      expect(component.result).toBeUndefined();
+      expect(component.error).toContain('unavailable');
     });
 
     it('applyPreset fills the form and runs the check with the preset values', () => {

@@ -41,7 +41,7 @@ export default defineConfig({
      take 20-30s, hence the generous timeout. */
   webServer: {
     command: 'pnpm start:all',
-    url: 'http://localhost:4200',
+    url: 'http://localhost:4200/api/access/diagnostics',
     reuseExistingServer: true,
     cwd: workspaceRoot,
     timeout: 180_000,

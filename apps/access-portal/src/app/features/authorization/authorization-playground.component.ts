@@ -52,7 +52,7 @@ export class AuthorizationPlaygroundComponent implements OnInit {
   ngOnInit(): void { this.loadDiagnostics(); }
 
   loadDiagnostics(): void {
-    this.diagnosticsError = '';
+    this.diagnostics = undefined; this.diagnosticsError = '';
     this.http.get<Diagnostics>('/api/access/diagnostics').subscribe({
       next: diagnostics => { this.diagnostics = diagnostics; this.changeDetector.markForCheck(); },
       error: () => { this.diagnosticsError = 'Diagnostics unavailable — the wrapper service may not be running.'; this.changeDetector.markForCheck(); },
@@ -65,7 +65,7 @@ export class AuthorizationPlaygroundComponent implements OnInit {
   }
 
   runCheck(): void {
-    this.loading = true; this.error = '';
+    this.loading = true; this.error = ''; this.result = undefined;
     this.http.post<CheckResponse>('/api/access/check', { user: this.user, relation: this.relation, object: this.object }).subscribe({
       next: result => { this.result = result; this.loading = false; this.changeDetector.markForCheck(); },
       error: () => { this.error = 'The wrapper service is unavailable. Start infrastructure and the Spring Boot app, then retry.'; this.loading = false; this.changeDetector.markForCheck(); },
